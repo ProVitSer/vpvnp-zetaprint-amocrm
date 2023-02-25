@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, NotFoundException, Param, Patch, Post } from '@nestjs/common';
-import { AmocrmUsers } from '@prisma/client';
+import { AmocrmUsers } from '../../prisma/generated/sqlite';
 import { NOT_FOUND_AMOCRM_USER_ERROR } from './amocrm-users.constants';
 import { AmocrmUsersService } from './amocrm-users.service';
 import { CreateAmocrmUserDto } from './dto/create-amocrm-user.dto';

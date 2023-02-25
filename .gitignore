@@ -4,6 +4,7 @@
 .env*
 *.db
 /api-log
+*/generated
 
 # Logs
 logs

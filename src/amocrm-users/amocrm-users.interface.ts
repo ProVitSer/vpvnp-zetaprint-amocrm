@@ -1,4 +1,4 @@
-import { AmocrmUsers, Prisma } from '@prisma/client';
+import { AmocrmUsers, Prisma } from '../../prisma/generated/sqlite';
 
 export interface AmocrmUsersServiceInterface {
   createAmocrmUser: (data: Prisma.AmocrmUsersCreateInput) => Promise<AmocrmUsers>;

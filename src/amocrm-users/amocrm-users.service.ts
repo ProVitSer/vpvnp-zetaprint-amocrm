@@ -1,11 +1,11 @@
-import { PrismaService } from '@app/prisma/prisma.service';
+import { PrismaCdrService, PrismaZetaService } from '@app/prisma/prisma.service';
 import { Injectable } from '@nestjs/common';
-import { AmocrmUsers, Prisma } from '@prisma/client';
+import { AmocrmUsers, Prisma } from '../../prisma/generated/sqlite';
 import { AmocrmUsersServiceInterface, UpdateAmocrmUserData } from './amocrm-users.interface';
 
 @Injectable()
 export class AmocrmUsersService implements AmocrmUsersServiceInterface {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaZetaService, private cdr: PrismaCdrService) {}
 
   public async createAmocrmUser(data: Prisma.AmocrmUsersCreateInput): Promise<AmocrmUsers> {
     return this.prisma.amocrmUsers.create({

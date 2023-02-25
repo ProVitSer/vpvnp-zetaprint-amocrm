@@ -1,0 +1,44 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/cdr"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_ASTERISK_URL")
+}
+
+model Cdr {
+  calldate        DateTime
+  clid            String
+  src             String
+  dst             String
+  dcontext        String
+  channel         String
+  dstchannel      String
+  lastapp         String
+  lastdata        String
+  duration        Int
+  billsec         Int
+  disposition     String
+  amaflags        Int
+  accountcode     String
+  uniqueid        String @unique
+  userfield       String
+  did             String
+  recordingfile   String
+  cnum            String
+  cnam            String
+  outboundCnum    String
+  outboundCnam    String
+  dstCnam         String
+  linkedid        String @unique
+  peeraccount     String
+  sequence        Int
+
+  @@map("cdr")
+}
+
+
+
+ 
