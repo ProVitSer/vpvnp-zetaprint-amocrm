@@ -21,7 +21,7 @@ export class AmocrmUsersController {
   @Patch(':id')
   async patch(@Param('id') id: string, @Body() data: CreateAmocrmUserDto): Promise<AmocrmUsers> {
     const where = { id: Number(id) };
-    const user = await this.amocrmUsersService.findAmocrmUserById(where);
+    const user = await this.amocrmUsersService.findAmocrmUser(where);
     if (!user) {
       throw new NotFoundException(NOT_FOUND_AMOCRM_USER_ERROR);
     }
@@ -34,7 +34,7 @@ export class AmocrmUsersController {
   @Delete(':id')
   async delete(@Param('id') id: string): Promise<AmocrmUsers> {
     const where = { id: Number(id) };
-    const user = await this.amocrmUsersService.findAmocrmUserById(where);
+    const user = await this.amocrmUsersService.findAmocrmUser(where);
     if (!user) {
       throw new NotFoundException(NOT_FOUND_AMOCRM_USER_ERROR);
     }

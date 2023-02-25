@@ -30,7 +30,7 @@ export class AmocrmUsersService implements AmocrmUsersServiceInterface {
     });
   }
 
-  public async findAmocrmUserById(data: Prisma.AmocrmUsersWhereUniqueInput): Promise<AmocrmUsers | null> {
+  public async findAmocrmUser(data: Prisma.AmocrmUsersWhereUniqueInput): Promise<AmocrmUsers | null> {
     return this.prisma.amocrmUsers.findFirst({
       where: data,
     });

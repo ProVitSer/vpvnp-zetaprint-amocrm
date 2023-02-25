@@ -5,7 +5,7 @@ export interface AmocrmUsersServiceInterface {
   getAmocrmUsers: () => Promise<AmocrmUsers[]>;
   updateAmocrmUser: (data: UpdateAmocrmUserData) => Promise<AmocrmUsers>;
   deleteAmocrmUser: (data: Prisma.AmocrmUsersWhereUniqueInput) => Promise<AmocrmUsers>;
-  findAmocrmUserById: (data: Prisma.AmocrmUsersWhereUniqueInput) => Promise<AmocrmUsers>;
+  findAmocrmUser: (data: Prisma.AmocrmUsersWhereUniqueInput) => Promise<AmocrmUsers>;
 }
 
 export interface UpdateAmocrmUserData {
