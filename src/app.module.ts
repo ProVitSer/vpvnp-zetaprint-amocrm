@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { AmocrmUsersModule } from './amocrm-users/amocrm-users.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { LoggerModule } from './logger/logger.module';
+import { AmocrmModule } from './amocrm/amocrm.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { LoggerModule } from './logger/logger.module';
     AmocrmUsersModule,
     PrismaModule,
     LoggerModule,
+    AmocrmModule,
   ],
   controllers: [],
   providers: [],
