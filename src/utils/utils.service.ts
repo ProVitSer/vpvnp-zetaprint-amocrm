@@ -6,6 +6,14 @@ export class UtilsService {
     return process.env.NODE_ENV === 'develop';
   }
 
+  static formatIncomingNumber(number: string): string {
+    return number.length == 10 ? number : number.substr(number.length - 10);
+  }
+
+  static replaceChannel(channel: string): string {
+    return channel.replace(/(PJSIP\/)(\d{3})-(.*)/, `$2`);
+  }
+
   static dataToString<T>(data: T): string | undefined | T {
     try {
       if (Array.isArray(data)) {
