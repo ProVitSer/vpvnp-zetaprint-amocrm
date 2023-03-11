@@ -11,3 +11,24 @@ export enum AmocrmAPIV4 {
   call = '/api/v4/calls',
   tasks = '/api/v4/tasks',
 }
+
+export enum DirectionType {
+  inbound = 'inbound',
+  outbound = 'outbound',
+}
+
+export enum AmocrmCallStatus {
+  Message = 1,
+  CallBackLater = 2,
+  Absent = 3,
+  Answer = 4,
+  WrongNumber = 5,
+  NoAnswer = 6,
+  Busy = 7,
+}
+
+export enum PbxCallStatus {
+  ANSWERED = 'ANSWERED',
+  NOANSWER = 'NO ANSWER',
+  BUSY = 'BUSY',
+}
