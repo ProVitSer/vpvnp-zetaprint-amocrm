@@ -1,4 +1,4 @@
-import { Inject, Injectable, OnApplicationBootstrap } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Client } from 'amocrm-js';
 import { LoggerService } from '@app/logger/logger.service';
@@ -9,7 +9,7 @@ import { AmocrmAPIV4 } from '../interfaces/amocrm.enum';
 import { INIT_AMO_ERROR, INIT_AMO_SUCCESS } from '../amocrm.constants';
 
 @Injectable()
-export class AmocrmV4Connection implements OnApplicationBootstrap {
+export class AmocrmV4Connection {
   public amocrmClient: Client = this.amocrm;
   private tokenPath: string = this.configService.get('AMOCRM_V4_TOKEN_PATH');
   constructor(
@@ -18,23 +18,17 @@ export class AmocrmV4Connection implements OnApplicationBootstrap {
     private readonly log: LoggerService,
   ) {}
 
-  async onApplicationBootstrap() {
-    try {
-      await this.setToken();
-      await this.connectionHandler();
-      await this.checkAmocrmInteraction();
-    } catch (e) {
-      this.log.error(e, AmocrmV4Connection.name);
-    }
-  }
-
   public async getAmocrmClient() {
-    return this.amocrmClient;
+    this.log.info(INIT_AMO_SUCCESS, AmocrmV4Connection.name);
+    await this.setToken();
+    this.handleConnection();
+    this.checkAmocrmInteraction();
+    return this.amocrm;
   }
 
   private async checkAmocrmInteraction() {
     try {
-      const response = await this.amocrmClient.request.get(AmocrmAPIV4.account);
+      const response = await this.amocrm.request.get(AmocrmAPIV4.account);
       if (!response.data.hasOwnProperty('id')) {
         this.log.error(`${INIT_AMO_ERROR} ${JSON.stringify(response)}`, AmocrmV4Connection.name);
       }
@@ -46,7 +40,7 @@ export class AmocrmV4Connection implements OnApplicationBootstrap {
 
   private async setToken() {
     const currentToken = await this.getConfigToken();
-    this.amocrmClient.token.setValue(currentToken);
+    this.amocrm.token.setValue(currentToken);
   }
 
   private async getConfigToken() {
@@ -72,8 +66,8 @@ export class AmocrmV4Connection implements OnApplicationBootstrap {
     try {
       const authUrl = this.amocrmClient.auth.getUrl('popup');
       console.log('Вам нужно перейти по ссылке и выдать права на аккаунт, а после перезагрузить приложение', authUrl);
-      await this.amocrmClient.request.get(AmocrmAPIV4.account);
-      const tokenInit: ITokenData = this.amocrmClient.token.getValue();
+      await this.amocrm.request.get(AmocrmAPIV4.account);
+      const tokenInit: ITokenData = this.amocrm.token.getValue();
       await writeFile(path.join(__dirname, this.tokenPath), JSON.stringify(tokenInit));
       return;
     } catch (e) {
@@ -82,32 +76,30 @@ export class AmocrmV4Connection implements OnApplicationBootstrap {
   }
 
   private async refreshToken(): Promise<void> {
-    const token: ITokenData = await this.amocrmClient.token.refresh();
+    const token: ITokenData = await this.amocrm.token.refresh();
     return await writeFile(path.join(__dirname, this.tokenPath), JSON.stringify(token));
   }
 
-  private async connectionHandler(): Promise<void> {
-    this.amocrmClient.on('connection:beforeConnect', async (error: any) => {
-      this.log.info(`connection:beforeConnect ${error}`, AmocrmV4Connection.name);
-      await this.refreshToken();
+  private handleConnection(): Promise<void> {
+    this.amocrm.connection.on('beforeConnect', async () => {
+      //this.log.info(`Подключение к Amocrm успешно`, AmocrmV4Connector.name);
     });
 
-    this.amocrmClient.on('connection:newToken', async (response: any) => {
-      this.log.info(`connection:newToken ${JSON.stringify(response)}`, AmocrmV4Connection.name);
-      await writeFile(path.join(__dirname, this.tokenPath), JSON.stringify(response.data));
+    this.amocrm.token.on('change', async () => {
+      this.log.info('token:newToken :', AmocrmV4Connection.name);
     });
 
-    this.amocrmClient.on('connection:authError', async (error: any) => {
+    this.amocrm.connection.on('connectionError', async (error: any) => {
       this.log.error(`connection:authError ${error}`, AmocrmV4Connection.name);
       await this.refreshToken();
     });
 
-    this.amocrmClient.on('connection:error', (error: any) => {
-      this.log.error(`connection:error ${error}`, AmocrmV4Connection.name);
+    this.amocrm.token.on('beforeRefresh', (response: any) => {
+      this.log.info('token:beforeRefreshToken', AmocrmV4Connection.name);
     });
 
-    this.amocrmClient.on('connection:beforeRefreshToken', (response: any) => {
-      this.log.info(`connection:beforeRefreshToken ${JSON.stringify(response)}`, AmocrmV4Connection.name);
+    this.amocrm.token.on('refresh', () => {
+      this.log.info('token:refresh', AmocrmV4Connection.name);
     });
 
     return;
