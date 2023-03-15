@@ -1,8 +1,8 @@
 import { Body, Controller, Post, Res } from '@nestjs/common';
 import { CdrService } from './cdr.service';
 import { Response } from 'express';
-import { CdrInfo } from './cdr.interfaces';
-import { CallType } from './cdr.enum';
+import { CdrInfo } from './interfaces/cdr.interfaces';
+import { CallType } from './interfaces/cdr.enum';
 
 @Controller('cdr')
 export class CdrController {

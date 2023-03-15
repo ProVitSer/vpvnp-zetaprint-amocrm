@@ -9,6 +9,7 @@ import { CdrService } from './cdr.service';
 
 @Module({
   imports: [LoggerModule, PrismaModule, AmocrmModule, AmocrmUsersModule],
+  exports: [AmocrmModule],
   controllers: [CdrController],
   providers: [CdrService],
 })

@@ -7,8 +7,9 @@ import { UtilsService } from '@app/utils/utils.service';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { Cdr } from 'prisma-cdr/generated/cdr';
-import { CallType } from './cdr.enum';
-import { CdrInfoWithTyp } from './cdr.interfaces';
+import { ADMIN_EXTENSION, NO_USE_EXTENSION } from './cdr.constants';
+import { CallType } from './interfaces/cdr.enum';
+import { CdrInfoWithType } from './interfaces/cdr.interfaces';
 
 @Injectable()
 export class CdrService {
@@ -19,19 +20,14 @@ export class CdrService {
     private readonly amocrmV4Service: AmocrmV4Service,
   ) {}
 
-  public async processingCdr(cdrInfo: CdrInfoWithTyp): Promise<void> {
+  public async processingCdr(cdrInfo: CdrInfoWithType): Promise<void> {
     try {
-      const cdrResult = await this.sendCdrInfo(cdrInfo);
+      const cdrResult = await this.getCdrInfo(cdrInfo);
+      if (cdrResult.length == 0) return;
       await Promise.all(
         cdrResult.map(async (c: Cdr) => {
-          const amocrmUser = await this.amocrmUsersService.findAmocrmUser({
-            extensionNumber: UtilsService.replaceChannel(cdrInfo.callType === CallType.incoming ? c.dstchannel : c.channel) || '12',
-          });
-          await this.amocrmV4Service.sendCallInfoToCRM({
-            result: c,
-            amocrmId: Number(amocrmUser.amocrmId),
-            direction: cdrInfo.callType === CallType.incoming ? DirectionType.inbound : DirectionType.outbound,
-          });
+          if (NO_USE_EXTENSION.includes(c?.dst)) return;
+          await this.actionsInAmocrm(cdrInfo, c);
         }),
       );
     } catch (e) {
@@ -39,11 +35,30 @@ export class CdrService {
     }
   }
 
-  public async sendCdrInfo(cdrInfo: CdrInfoWithTyp): Promise<Cdr[]> {
+  private async getAmocrmId(cdrInfo: CdrInfoWithType, c: Cdr): Promise<number> {
+    const { amocrmId } = await this.amocrmUsersService.findAmocrmUser({
+      extensionNumber: UtilsService.replaceChannel(cdrInfo.callType === CallType.incoming ? c.dstchannel : c.channel) || ADMIN_EXTENSION,
+    });
+    return Number(amocrmId);
+  }
+
+  private async actionsInAmocrm(cdrInfo: CdrInfoWithType, c: Cdr): Promise<void> {
+    const amocrmId = await this.getAmocrmId(cdrInfo, c);
+
+    if (cdrInfo.callType === CallType.incoming) await this.amocrmV4Service.actionsInAmocrm({ incomingNumber: c.src, amocrmId: amocrmId });
+
+    return await this.amocrmV4Service.sendCallInfoToCRM({
+      result: c,
+      amocrmId: amocrmId,
+      direction: cdrInfo.callType === CallType.incoming ? DirectionType.inbound : DirectionType.outbound,
+    });
+  }
+
+  public async getCdrInfo(cdrInfo: CdrInfoWithType): Promise<Cdr[]> {
     try {
       switch (cdrInfo.callType) {
         case CallType.incoming:
-          return await this.searchIncomingCallInfoInCdr(cdrInfo.unicueid);
+          return await this.searchIncomingGroupCallInfoInCdr(cdrInfo.unicueid);
         case CallType.outgoing:
           return await this.searchOutgoingCallInfoInCdr(cdrInfo.unicueid);
         default:
@@ -60,6 +75,15 @@ export class CdrService {
           select *
           from cdr 
           where uniqueid like ${unicueid} order by billsec DESC`,
+    );
+  }
+
+  private async searchIncomingGroupCallInfoInCdr(unicueid: string): Promise<Cdr[]> {
+    return await this.prismaCdr.$queryRaw(
+      Prisma.sql`
+          select *
+          from cdr 
+          where uniqueid like ${unicueid} and disposition = 'ANSWERED' order by sequence desc limit 1`,
     );
   }
 
