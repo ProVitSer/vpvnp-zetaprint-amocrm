@@ -11,7 +11,7 @@ export class UtilsService {
   }
 
   static replaceChannel(channel: string): string {
-    return channel.replace(/(PJSIP\/)(\d{3})-(.*)/, `$2`);
+    return channel.replace(/(SIP\/)(\d{3})-(.*)/, `$2`);
   }
 
   static dataToString<T>(data: T): string | undefined | T {
