@@ -4,6 +4,7 @@ import { AmocrmUsersModule } from './amocrm-users/amocrm-users.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { LoggerModule } from './logger/logger.module';
 import { AmocrmModule } from './amocrm/amocrm.module';
+import { CdrModule } from './cdr/cdr.module';
 
 @Module({
   imports: [
@@ -13,7 +14,8 @@ import { AmocrmModule } from './amocrm/amocrm.module';
     AmocrmUsersModule,
     PrismaModule,
     LoggerModule,
-    AmocrmModule,
+    CdrModule,
+    //AmocrmModule,
   ],
   controllers: [],
   providers: [],
