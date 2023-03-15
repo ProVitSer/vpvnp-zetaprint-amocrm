@@ -34,6 +34,6 @@ import { AmocrmV4Service } from './service/amocrm-v4.service';
     AmocrmV2Service,
     AmocrmV4Service,
   ],
-  exports: [AmocrmV2Service],
+  exports: [AmocrmV2Service, AmocrmV4Service],
 })
 export class AmocrmModule {}

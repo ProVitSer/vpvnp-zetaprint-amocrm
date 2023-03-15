@@ -32,3 +32,8 @@ export enum PbxCallStatus {
   NOANSWER = 'NO ANSWER',
   BUSY = 'BUSY',
 }
+
+export enum ContactsOrder {
+  update = 'updated_at',
+  id = 'id',
+}
