@@ -10,7 +10,7 @@ export class CdrController {
 
   @Post('outgoing')
   async createOutgoingCdr(@Res() res: Response, @Body() info: CdrInfo) {
-    await this.cdrService.processingCdr({
+    this.cdrService.processingCdr({
       ...info,
       callType: CallType.outgoing,
     });
@@ -19,8 +19,7 @@ export class CdrController {
 
   @Post('incoming')
   async createIncomingCdr(@Res() res: Response, @Body() info: CdrInfo) {
-    console.log(info);
-    await this.cdrService.processingCdr({
+    this.cdrService.processingCdr({
       ...info,
       callType: CallType.incoming,
     });
