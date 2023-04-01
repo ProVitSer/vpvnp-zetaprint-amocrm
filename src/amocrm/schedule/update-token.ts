@@ -1,11 +1,12 @@
 import { LoggerService } from '@app/logger/logger.service';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Cron, CronExpression } from '@nestjs/schedule';
+import { Cron, CronExpression, Timeout } from '@nestjs/schedule';
 import { Client } from 'amocrm-js';
 import { AmocrmV4Connection } from '../connection/amocrm-v4.connection';
 import * as path from 'path';
 import { writeFile } from 'fs/promises';
+import { ITokenData } from 'amocrm-js/dist/interfaces/common';
 
 @Injectable()
 export class AmocrmUpdateTokenSchedule {
@@ -27,9 +28,9 @@ export class AmocrmUpdateTokenSchedule {
     }
   }
 
-  private async update(amocrmClient: Client, token: any) {
+  private async update(amocrmClient: Client, token: ITokenData) {
     this.logger.info('Новый токен: ' + token, AmocrmUpdateTokenSchedule.name);
-    await writeFile(path.join(__dirname, this.configService.get('amocrm.tokenPath')), JSON.stringify(token));
+    await writeFile(path.join(__dirname, this.configService.get('AMOCRM_V4_TOKEN_PATH')), JSON.stringify(token));
     amocrmClient.token.setValue(token);
     this.logger.info('Новый токен успешно добавлен', AmocrmUpdateTokenSchedule.name);
   }
