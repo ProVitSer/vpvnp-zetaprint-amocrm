@@ -18,6 +18,7 @@ import {
   SendCallInfoToCRM,
 } from '../interfaces/amocrm.interface';
 import {
+  AMOCRM_ADMIN_ID,
   AMOCRM_CONTACT_ENUM_ID,
   AMOCRM_CONTACT_ID,
   AMOCRM_CREATE_LEAD_STATUS_ID,
@@ -45,12 +46,12 @@ export class AmocrmV4Service implements OnApplicationBootstrap {
 
   public async actionsInAmocrm({ incomingNumber, amocrmId }: ActionsInAmocrmData): Promise<void> {
     try {
-      const resultSearchContact = await this.searchContact(incomingNumber);
-      if (resultSearchContact == false) {
+      if (!(await this.searchContact(incomingNumber))) {
         const contactsId = await this.createContact({ incomingNumber, amocrmId });
         await this.createLead({ incomingNumber, contactsId, amocrmId });
       }
     } catch (e) {
+      this.logger.error(e, AmocrmV4Service.name);
       throw e;
     }
   }
@@ -58,12 +59,13 @@ export class AmocrmV4Service implements OnApplicationBootstrap {
   public async searchContact(incomingNumber: string): Promise<boolean> {
     try {
       const info: AmocrmGetContactsRequest = {
-        query: UtilsService.formatIncomingNumber(incomingNumber),
+        query: UtilsService.normalizePhoneNumber(incomingNumber),
       };
       const result = (await this.amocrm.request.get<AmocrmGetContactsResponse>(AmocrmAPIV4.contacts, info))?.data;
       this.logger.info(`Результат поиска контакта ${incomingNumber}: ${JSON.stringify(result)}`, AmocrmV4Service.name);
       return !!result?._embedded ? true : false;
     } catch (e) {
+      this.logger.error(e, AmocrmV4Service.name);
       throw `${e}: ${incomingNumber}`;
     }
   }
@@ -73,7 +75,7 @@ export class AmocrmV4Service implements OnApplicationBootstrap {
       const contact: AmocrmCreateContact = {
         name: `Новый клиент ${incomingNumber}`,
         responsible_user_id: amocrmId,
-        created_by: AMOCRM_CONTACT_ID,
+        created_by: AMOCRM_ADMIN_ID,
         custom_fields_values: [
           {
             field_id: AMOCRM_CONTACT_ID,
@@ -81,7 +83,7 @@ export class AmocrmV4Service implements OnApplicationBootstrap {
             field_code: 'PHONE',
             values: [
               {
-                value: incomingNumber,
+                value: UtilsService.normalizePhoneNumber(incomingNumber),
                 enum_id: AMOCRM_CONTACT_ENUM_ID,
                 enum_code: 'MOB',
               },
@@ -102,7 +104,7 @@ export class AmocrmV4Service implements OnApplicationBootstrap {
       const lead: AmocrmCreateLead = {
         name: `Новый клиент ${incomingNumber}`,
         responsible_user_id: amocrmId,
-        created_by: AMOCRM_CONTACT_ID,
+        created_by: AMOCRM_ADMIN_ID,
         status_id: AMOCRM_CREATE_LEAD_STATUS_ID,
         _embedded: {
           contacts: [
@@ -144,7 +146,6 @@ export class AmocrmV4Service implements OnApplicationBootstrap {
         created_at: date,
         updated_at: date,
       };
-
       this.logger.info(callInfo, AmocrmV4Service.name);
       const apiResponse = await this.amocrm.request.post(AmocrmAPIV4.call, [callInfo]);
       this.logger.info(apiResponse.data, AmocrmV4Service.name);
