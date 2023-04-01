@@ -2,7 +2,7 @@ import { CallType } from './cdr.enum';
 
 export interface CdrInfo {
   exten: string;
-  unicueid: string;
+  uniqueid: string;
   extensionNumber: string;
   billsec: string;
   disposition: string;
