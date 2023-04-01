@@ -6,12 +6,29 @@ export class UtilsService {
     return process.env.NODE_ENV === 'develop';
   }
 
+  static normalizePhoneNumber(phoneNumber: string): string {
+    const digits = phoneNumber.replace(/\D/g, '');
+    if (digits.startsWith('8')) {
+      return '7' + digits.slice(1);
+    }
+
+    if (digits.startsWith('+7')) {
+      return digits.slice(1);
+    }
+
+    return digits;
+  }
+
+  static sleep(ms: number): Promise<any> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+  
   static formatIncomingNumber(number: string): string {
     return number.length == 10 ? number : number.substr(number.length - 10);
   }
 
   static replaceChannel(channel: string): string {
-    return channel.replace(/(SIP\/)(\d{3})-(.*)/, `$2`);
+    return channel.replace(/(PJSIP\/)(\d{3})-(.*)/, `$2`);
   }
 
   static dataToString<T>(data: T): string | undefined | T {
