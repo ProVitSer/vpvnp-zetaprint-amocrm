@@ -1,0 +1,15 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./zeta.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/sqlite"
+}
+
+model AmocrmUsers {
+  id                Int     @default(autoincrement()) @id
+  amocrmId          String  @unique
+  extensionNumber   String  @unique
+}
