@@ -18,11 +18,17 @@ export class AmocrmV4Connection {
     private readonly log: LoggerService,
   ) {}
 
-  public async getAmocrmClient() {
+  public async getInitAmocrmClient() {
     this.log.info(INIT_AMO_SUCCESS, AmocrmV4Connection.name);
     await this.setToken();
     this.handleConnection();
     this.checkAmocrmInteraction();
+    return this.amocrm;
+  }
+
+  
+  public getAmocrmClient(){
+    this.log.info(INIT_AMO_SUCCESS, AmocrmV4Connection.name);
     return this.amocrm;
   }
 

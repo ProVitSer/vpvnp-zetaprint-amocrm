@@ -137,7 +137,7 @@ export class AmocrmV4Service implements OnApplicationBootstrap {
         link: `${this.recordDomain}/rec/monitor/${moment(calldate)
           .subtract(CALL_DATE_SUBTRACT, 'hour')
           .format(RECORD_PATH_FROMAT)}/${recordingfile.replace(/.wav/i, '.mp3')}`,
-        phone: src !== undefined ? src : dst,
+        phone: src !== undefined ? UtilsService.normalizePhoneNumber(src) : UtilsService.normalizePhoneNumber(dst),
         call_result: '',
         call_status: CALL_STATUS_MAP[disposition],
         responsible_user_id: amocrmId,
@@ -155,6 +155,6 @@ export class AmocrmV4Service implements OnApplicationBootstrap {
     }
   }
   private async getAmocrmClient(): Promise<Client> {
-    return await this.amocrmConnect.getAmocrmClient();
+    return await this.amocrmConnect.getInitAmocrmClient();
   }
 }
