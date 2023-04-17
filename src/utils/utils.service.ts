@@ -19,6 +19,11 @@ export class UtilsService {
     return digits;
   }
 
+  static addPlusToNumber(number: string): string{
+    return '+' + number
+  }
+
+
   static sleep(ms: number): Promise<any> {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }

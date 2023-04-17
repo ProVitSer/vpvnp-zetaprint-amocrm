@@ -83,7 +83,7 @@ export class AmocrmV4Service implements OnApplicationBootstrap {
             field_code: 'PHONE',
             values: [
               {
-                value: UtilsService.normalizePhoneNumber(incomingNumber),
+                value: UtilsService.addPlusToNumber(UtilsService.normalizePhoneNumber(incomingNumber)),
                 enum_id: AMOCRM_CONTACT_ENUM_ID,
                 enum_code: 'MOB',
               },
@@ -127,7 +127,7 @@ export class AmocrmV4Service implements OnApplicationBootstrap {
     try {
       const { result, direction, amocrmId } = data;
       const { uniqueid, src, dst, calldate, billsec, disposition, recordingfile } = result;
-      const date = moment(calldate).subtract(CALL_DATE_SUBTRACT, 'hour').unix();
+      const date = moment(calldate).unix();
 
       const callInfo: AmocrmAddCallInfo = {
         direction: direction,
