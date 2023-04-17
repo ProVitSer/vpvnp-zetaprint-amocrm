@@ -7,9 +7,10 @@ import { UtilsService } from '@app/utils/utils.service';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '../../prisma-cdr/generated/cdr';
 import { Cdr } from 'prisma-cdr/generated/cdr';
-import { ADMIN_EXTENSION, NO_USE_EXTENSION } from './cdr.constants';
+import { NO_USE_EXTENSION } from './cdr.constants';
 import { CallType } from './interfaces/cdr.enum';
 import { CdrInfoWithType } from './interfaces/cdr.interfaces';
+import { AMOCRM_ADMIN_ID } from '@app/amocrm/amocrm.constants';
 
 @Injectable()
 export class CdrService {
@@ -22,8 +23,10 @@ export class CdrService {
 
   public async processingCdr(cdrInfo: CdrInfoWithType): Promise<void> {
     try {
+      await UtilsService.sleep(10000);
       const cdrResult = await this.getCdrInfo(cdrInfo);
       if (cdrResult.length == 0) return;
+
       for (const c of cdrResult) {
         await UtilsService.sleep(500);
         if (NO_USE_EXTENSION.includes(c?.dst || c?.src)) return;
@@ -35,10 +38,13 @@ export class CdrService {
   }
 
   private async getAmocrmId(cdrInfo: CdrInfoWithType, c: Cdr): Promise<number> {
-    const { amocrmId } = await this.amocrmUsersService.findAmocrmUser({
-      extensionNumber: UtilsService.replaceChannel(cdrInfo.callType === CallType.incoming ? c.dstchannel : c.channel) || ADMIN_EXTENSION,
+    this.logger.info(UtilsService.replaceChannel(cdrInfo.callType === CallType.incoming ? c.dstchannel : c.channel), CdrService.name);
+
+    const amocrmUsers = await this.amocrmUsersService.findAmocrmUser({
+      extensionNumber: UtilsService.replaceChannel(cdrInfo.callType === CallType.incoming ? c.dstchannel : c.channel),
     });
-    return Number(amocrmId);
+    this.logger.info(amocrmUsers?.amocrmId, CdrService.name);
+    return (!!amocrmUsers?.amocrmId) ? Number(amocrmUsers?.amocrmId): Number(AMOCRM_ADMIN_ID);
   }
 
   private async actionsInAmocrm(cdrInfo: CdrInfoWithType, c: Cdr): Promise<void> {
