@@ -9,7 +9,6 @@ import {
   AmocrmAddCallInfo,
   AmocrmCreateContact,
   AmocrmCreateContactResponse,
-  AmocrmCreateLead,
   AmocrmCreateLeadResponse,
   AmocrmGetContactsRequest,
   AmocrmGetContactsResponse,
@@ -22,12 +21,19 @@ import {
   AMOCRM_CONTACT_ENUM_ID,
   AMOCRM_CONTACT_ID,
   AMOCRM_CREATE_LEAD_STATUS_ID,
-  CALL_DATE_SUBTRACT,
   CALL_STATUS_MAP,
+  CUSTOM_FIELDS_VALUES,
+  CUSTOM_FIELD_NAME,
+  CUSTOM_FIELD_TYPE,
+  MARKETING_ENUM_ID,
+  MARKETING_FIELD_ID,
+  MARKETING_PIPELINE_ID,
+  MARKETING_STATUS_ID,
   RECORD_PATH_FROMAT,
 } from '../amocrm.constants';
 import { AmocrmAPIV4 } from '../interfaces/amocrm.enum';
 import { UtilsService } from '@app/utils/utils.service';
+import { ContextType } from '@app/cdr/interfaces/cdr.enum';
 
 @Injectable()
 export class AmocrmV4Service implements OnApplicationBootstrap {
@@ -44,11 +50,11 @@ export class AmocrmV4Service implements OnApplicationBootstrap {
     this.amocrm = await this.getAmocrmClient();
   }
 
-  public async actionsInAmocrm({ incomingNumber, amocrmId }: ActionsInAmocrmData): Promise<void> {
+  public async actionsInAmocrm({ incomingNumber, amocrmId, exten }: ActionsInAmocrmData): Promise<void> {
     try {
       if (!(await this.searchContact(incomingNumber))) {
         const contactsId = await this.createContact({ incomingNumber, amocrmId });
-        await this.createLead({ incomingNumber, contactsId, amocrmId });
+        await this.createLead({ incomingNumber, contactsId, amocrmId, exten });
       }
     } catch (e) {
       this.logger.error(e, AmocrmV4Service.name);
@@ -74,8 +80,8 @@ export class AmocrmV4Service implements OnApplicationBootstrap {
     try {
       const contact: AmocrmCreateContact = {
         name: `Новый клиент ${incomingNumber}`,
-        responsible_user_id: amocrmId,
-        created_by: AMOCRM_ADMIN_ID,
+        responsible_user_id: amocrmId || AMOCRM_ADMIN_ID,
+        created_by: amocrmId || AMOCRM_ADMIN_ID,
         custom_fields_values: [
           {
             field_id: AMOCRM_CONTACT_ID,
@@ -99,22 +105,53 @@ export class AmocrmV4Service implements OnApplicationBootstrap {
     }
   }
 
-  public async createLead({ incomingNumber, amocrmId, contactsId }: CreateLeadData): Promise<AmocrmCreateLeadResponse> {
+  public async createLead({ incomingNumber, amocrmId, contactsId, exten }: CreateLeadData): Promise<AmocrmCreateLeadResponse> {
     try {
-      const lead: AmocrmCreateLead = {
-        name: `Новый клиент ${incomingNumber}`,
-        responsible_user_id: amocrmId,
-        created_by: AMOCRM_ADMIN_ID,
-        status_id: AMOCRM_CREATE_LEAD_STATUS_ID,
-        _embedded: {
-          contacts: [
+      let lead;
+      if([ContextType.cardszetaprint, ContextType.zcardclub, ContextType.zetaprint].includes(exten as ContextType)){
+        lead = {
+          name: `Новый клиент ${incomingNumber}`,
+          responsible_user_id: amocrmId || AMOCRM_ADMIN_ID,
+          created_by: amocrmId || AMOCRM_ADMIN_ID,
+          status_id: MARKETING_STATUS_ID,
+          pipeline_id: MARKETING_PIPELINE_ID,
+          custom_fields_values: [
             {
-              id: contactsId,
-            },
+              field_id: MARKETING_FIELD_ID,
+              field_name: CUSTOM_FIELD_NAME,
+              field_type: CUSTOM_FIELD_TYPE,
+              values: [
+                {
+                  enum_id:	MARKETING_ENUM_ID,
+                  value:	CUSTOM_FIELDS_VALUES
+                },
+              ],
+            }
           ],
-        },
-      };
-
+          _embedded: {
+            contacts: [
+              {
+                id: contactsId,
+              },
+            ],
+          },
+        };
+      }  else {
+        lead = {
+          name: `Новый клиент ${incomingNumber}`,
+          responsible_user_id: amocrmId || AMOCRM_ADMIN_ID,
+          created_by: amocrmId || AMOCRM_ADMIN_ID,
+          status_id: AMOCRM_CREATE_LEAD_STATUS_ID,
+          _embedded: {
+            contacts: [
+              {
+                id: contactsId,
+              },
+            ],
+          },
+        };
+  
+      }
       this.logger.info(lead, AmocrmV4Service.name);
       const apiResponse = await this.amocrm.request.post<AmocrmCreateLeadResponse>(AmocrmAPIV4.leads, [lead]);
       return apiResponse.data;
@@ -127,7 +164,7 @@ export class AmocrmV4Service implements OnApplicationBootstrap {
     try {
       const { result, direction, amocrmId } = data;
       const { uniqueid, src, dst, calldate, billsec, disposition, recordingfile } = result;
-      const date = moment(calldate).unix();
+      const date = moment(calldate).subtract('3', 'hour').unix();
 
       const callInfo: AmocrmAddCallInfo = {
         direction: direction,
@@ -135,7 +172,6 @@ export class AmocrmV4Service implements OnApplicationBootstrap {
         duration: billsec,
         source: 'amo_custom_widget',
         link: `${this.recordDomain}/rec/monitor/${moment(calldate)
-          .subtract(CALL_DATE_SUBTRACT, 'hour')
           .format(RECORD_PATH_FROMAT)}/${recordingfile.replace(/.wav/i, '.mp3')}`,
         phone: src !== undefined ? UtilsService.normalizePhoneNumber(src) : UtilsService.normalizePhoneNumber(dst),
         call_result: '',

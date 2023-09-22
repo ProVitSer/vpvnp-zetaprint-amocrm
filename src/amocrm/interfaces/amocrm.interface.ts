@@ -32,9 +32,12 @@ export type CreateContactData = BaseAmocrmServiceData;
 
 export interface CreateLeadData extends BaseAmocrmServiceData {
   contactsId: number;
+  exten: string;
 }
 
-export type ActionsInAmocrmData = BaseAmocrmServiceData;
+export interface ActionsInAmocrmData extends BaseAmocrmServiceData {
+  exten: string;
+}
 
 export interface AmocrmAddCallInfoResponse {
   _total_items: number;

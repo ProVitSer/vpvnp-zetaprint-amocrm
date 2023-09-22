@@ -50,7 +50,7 @@ export class CdrService {
   private async actionsInAmocrm(cdrInfo: CdrInfoWithType, c: Cdr): Promise<void> {
     try {
       const amocrmId = await this.getAmocrmId(cdrInfo, c);
-      if (cdrInfo.callType === CallType.incoming) await this.amocrmV4Service.actionsInAmocrm({ incomingNumber: c.src, amocrmId: amocrmId });
+      if (cdrInfo.callType === CallType.incoming) await this.amocrmV4Service.actionsInAmocrm({ incomingNumber: c.src, amocrmId: amocrmId, exten: cdrInfo.exten });
   
       return await this.amocrmV4Service.sendCallInfoToCRM({
         result: c,
